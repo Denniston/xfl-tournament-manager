@@ -1,0 +1,13 @@
+# Local env files (Where your Supabase keys live)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependencies (This folder is huge, never upload it)
+node_modules/
+
+# Build output
+dist/
+build/
