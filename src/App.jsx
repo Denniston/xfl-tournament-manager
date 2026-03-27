@@ -8,20 +8,29 @@ import Teams from './pages/Teams';
 import Fighters from './pages/Fighters';
 import TournamentCreator from './pages/TournamentCreator';
 import BracketView from './pages/BracketView';
+import Login from './pages/Login';
 
 function App() {
   const [dbStatus, setDbStatus] = useState("Checking...");
+  const [session, setSession] = useState(null);
 
   useEffect(() => {
+    // Check connection
     async function checkConnection() {
       const { data, error } = await supabase.from('teams').select('id').limit(1);
       if (error) setDbStatus("❌ Connection Error");
       else setDbStatus("✅ Connected");
     }
     checkConnection();
+
+    // Handle Session
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Style for the active page link
   const activeStyle = {
     color: '#FFD700',
     textDecoration: 'underline',
@@ -52,10 +61,18 @@ function App() {
             <NavLink to="/teams" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Gyms</NavLink>
             <NavLink to="/fighters" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Fighters</NavLink>
             <NavLink to="/bracket" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Brackets</NavLink>
-            <NavLink to="/create" style={({ isActive }) => isActive ? 
-              {...activeStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'} : 
-              {...navLinkStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'}
-            }>+ New</NavLink>
+            
+            {session ? (
+              <>
+                <NavLink to="/create" style={({ isActive }) => isActive ? 
+                  {...activeStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'} : 
+                  {...navLinkStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'}
+                }>+ New</NavLink>
+                <button onClick={() => supabase.auth.signOut()} style={{ background: '#333', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Logout</button>
+              </>
+            ) : (
+              <NavLink to="/login" style={navLinkStyle}>Login</NavLink>
+            )}
           </nav>
           
           <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{dbStatus}</div>
@@ -68,10 +85,11 @@ function App() {
         }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/teams" element={<Teams />} />
-            <Route path="/fighters" element={<Fighters />} />
-            <Route path="/create" element={<TournamentCreator />} />
-            <Route path="/bracket" element={<BracketView />} />
+            <Route path="/teams" element={<Teams session={session} />} />
+            <Route path="/fighters" element={<Fighters session={session} />} />
+            <Route path="/create" element={session ? <TournamentCreator /> : <Login />} />
+            <Route path="/bracket" element={<BracketView session={session} />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </main>
 

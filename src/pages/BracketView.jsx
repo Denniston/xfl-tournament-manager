@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 
-const BracketView = () => {
+const BracketView = ({ session }) => {
   const [bouts, setBouts] = useState([]);
   const [tournaments, setTournaments] = useState([]);
   const [selectedID, setSelectedID] = useState('');
@@ -52,7 +52,6 @@ const BracketView = () => {
       .order('id', { ascending: true });
 
     if (nextBouts && nextBouts.length > 0) {
-      // Find the parent match in the next round
       const currentRoundBouts = bouts.filter(b => b.round_number === bout.round_number);
       const boutIndex = currentRoundBouts.findIndex(b => b.id === bout.id);
       const nextBoutIndex = Math.floor(boutIndex / 2);
@@ -61,7 +60,6 @@ const BracketView = () => {
       if (targetBout) {
         const isFighterA = boutIndex % 2 === 0;
         const updateData = isFighterA ? { fighter_a_id: winnerId } : { fighter_b_id: winnerId };
-        
         await supabase.from('bouts').update(updateData).eq('id', targetBout.id);
       }
     }
@@ -93,7 +91,8 @@ const BracketView = () => {
                 <span style={{ fontWeight: bout.winner_id === bout.fighter_a_id ? 'bold' : 'normal', color: bout.winner_id === bout.fighter_a_id ? 'green' : 'black' }}>
                   {bout.fighter_a?.name || 'TBD'}
                 </span>
-                {!bout.winner_id && bout.fighter_a_id && (
+                {/* Only show "Win" button if user is logged in (session exists) */}
+                {session && !bout.winner_id && bout.fighter_a_id && (
                   <button onClick={() => handleSetWinner(bout, bout.fighter_a_id)} style={winBtnStyle}>Win</button>
                 )}
               </div>
@@ -102,7 +101,8 @@ const BracketView = () => {
                 <span style={{ fontWeight: bout.winner_id === bout.fighter_b_id ? 'bold' : 'normal', color: bout.winner_id === bout.fighter_b_id ? 'green' : 'black' }}>
                   {bout.fighter_b?.name || 'TBD'}
                 </span>
-                {!bout.winner_id && bout.fighter_b_id && (
+                {/* Only show "Win" button if user is logged in (session exists) */}
+                {session && !bout.winner_id && bout.fighter_b_id && (
                   <button onClick={() => handleSetWinner(bout, bout.fighter_b_id)} style={winBtnStyle}>Win</button>
                 )}
               </div>
