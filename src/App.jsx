@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { supabase } from './services/supabaseClient';
 
 // Import your pages
@@ -14,7 +14,6 @@ function App() {
 
   useEffect(() => {
     async function checkConnection() {
-      // Test connection to Supabase
       const { data, error } = await supabase.from('teams').select('id').limit(1);
       if (error) setDbStatus("❌ Connection Error");
       else setDbStatus("✅ Connected");
@@ -22,49 +21,50 @@ function App() {
     checkConnection();
   }, []);
 
+  // Style for the active page link
+  const activeStyle = {
+    color: '#FFD700',
+    textDecoration: 'underline',
+    fontWeight: 'bold',
+    fontSize: '0.95rem'
+  };
+
+  const navLinkStyle = {
+    color: 'white',
+    textDecoration: 'none',
+    fontSize: '0.95rem',
+    transition: 'opacity 0.2s'
+  };
+
   return (
     <Router>
       <div style={{ fontFamily: 'sans-serif', backgroundColor: '#f4f4f4', minHeight: '100vh' }}>
         
-        {/* Navigation Header */}
         <header style={{ 
-          background: '#111', 
-          color: 'white', 
-          padding: '1rem 2rem', 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          background: '#111', color: 'white', padding: '1rem 2rem', 
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
         }}>
           <h1 style={{ margin: 0, fontSize: '1.4rem', letterSpacing: '1px', fontWeight: '800' }}>XFL OPS CENTER</h1>
           
           <nav style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
-            <Link to="/" style={navLinkStyle}>Dashboard</Link>
-            <Link to="/teams" style={navLinkStyle}>Gyms</Link>
-            <Link to="/fighters" style={navLinkStyle}>Fighters</Link>
-            <Link to="/bracket" style={navLinkStyle}>Brackets</Link>
-            <Link to="/create" style={{
-              ...navLinkStyle, 
-              background: '#FFD700', 
-              color: '#000', 
-              padding: '6px 12px', 
-              borderRadius: '4px',
-              fontWeight: 'bold'
-            }}>+ New Tournament</Link>
+            <NavLink to="/" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Dashboard</NavLink>
+            <NavLink to="/teams" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Gyms</NavLink>
+            <NavLink to="/fighters" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Fighters</NavLink>
+            <NavLink to="/bracket" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Brackets</NavLink>
+            <NavLink to="/create" style={({ isActive }) => isActive ? 
+              {...activeStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'} : 
+              {...navLinkStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'}
+            }>+ New</NavLink>
           </nav>
           
           <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>{dbStatus}</div>
         </header>
 
-        {/* Main Application Window */}
         <main style={{ 
-          maxWidth: '1100px', 
-          margin: '40px auto', 
-          background: 'white', 
-          borderRadius: '12px', 
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          minHeight: '60vh',
-          padding: '30px'
+          maxWidth: '1100px', margin: '40px auto', background: 'white', 
+          borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          minHeight: '60vh', padding: '30px'
         }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
@@ -82,12 +82,5 @@ function App() {
     </Router>
   );
 }
-
-const navLinkStyle = {
-  color: 'white',
-  textDecoration: 'none',
-  fontSize: '0.95rem',
-  transition: 'opacity 0.2s'
-};
 
 export default App;
