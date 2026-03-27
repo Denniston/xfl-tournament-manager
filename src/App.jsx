@@ -15,7 +15,7 @@ function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Check connection
+    // 1. Check database connection
     async function checkConnection() {
       const { data, error } = await supabase.from('teams').select('id').limit(1);
       if (error) setDbStatus("❌ Connection Error");
@@ -23,14 +23,21 @@ function App() {
     }
     checkConnection();
 
-    // Handle Session
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    // 2. Handle User Session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
     });
-    return () => subscription.unsubscribe();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
+  // Styles for the navigation
   const activeStyle = {
     color: '#FFD700',
     textDecoration: 'underline',
@@ -65,13 +72,13 @@ function App() {
             {session ? (
               <>
                 <NavLink to="/create" style={({ isActive }) => isActive ? 
-                  {...activeStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'} : 
-                  {...navLinkStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px'}
+                  { ...activeStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px', textDecoration: 'none' } : 
+                  { ...navLinkStyle, background: '#FFD700', color: '#000', padding: '6px 12px', borderRadius: '4px' }
                 }>+ New</NavLink>
                 <button onClick={() => supabase.auth.signOut()} style={{ background: '#333', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Logout</button>
               </>
             ) : (
-              <NavLink to="/login" style={navLinkStyle}>Login</NavLink>
+              <NavLink to="/login" style={({ isActive }) => isActive ? activeStyle : navLinkStyle}>Login</NavLink>
             )}
           </nav>
           
